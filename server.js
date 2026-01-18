@@ -8,7 +8,6 @@ const express = require('express');
 // assets out of the `public` folder and exposes two API routes for
 // saving a cookie and triggering a scrape.  Keeping all of the route
 // handlers in separate files (under the routes folder) makes the
-// application easier to reason about and maintain.
 const app = express();
 
 
