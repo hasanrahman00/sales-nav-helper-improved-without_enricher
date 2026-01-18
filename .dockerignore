@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.DS_Store
+.git
+.gitignore
+user_data/
+all_jobs/
+data/
+*.csv
+*.bak
