@@ -1,0 +1,13 @@
+{
+  "id": "sfd_20260118_120455",
+  "url": "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(doLogHistory%3Atrue)%2Cfilters%3AList((type%3ACOMPANY_HEADCOUNT%2Cvalues%3AList((id%3AB%2Ctext%3A1-10%2CselectionType%3AINCLUDED)))))&sessionId=PJpPCWiARNaeGAjtcHpjkA%3D%3D&viewAllFilters=true",
+  "listName": "sfd",
+  "timestamp": "20260118_120455",
+  "fileName": "sfd_20260118_120455.csv",
+  "filePath": "C:\\Users\\Hassan\\OneDrive\\Documents\\sales-nav-helper-improved-without_enricher\\data\\sfd_20260118_120455.csv",
+  "pageIndex": 2,
+  "totalRows": 25,
+  "totalContacts": 25,
+  "state": "running",
+  "currentUrl": "https://www.linkedin.com/sales/search/people?page=2&query=(recentSearchParam%3A(id%3A5169429018%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACOMPANY_HEADCOUNT%2Cvalues%3AList((id%3AB%2Ctext%3A1-10%2CselectionType%3AINCLUDED)))))&sessionId=PJpPCWiARNaeGAjtcHpjkA%3D%3D&viewAllFilters=true"
+}

@@ -1,12 +1,1 @@
 node_modules/
-user_data/
-all_jobs/
-data/
-*.csv
-*.bak
-contactout_cookies.json
-signalhire_cookies.json
-cookies/
-.DS_Store
-npm-debug.log
-.env
