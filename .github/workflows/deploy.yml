@@ -68,4 +68,4 @@ jobs:
             fi
 
             # Basic smoke test from the VPS host
-            curl -fsS -o /dev/null http://127.0.0.1:3002/salesnav/api/status
+            curl -fsS -o /dev/null http://127.0.0.1:3002/salesnav/status

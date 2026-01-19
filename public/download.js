@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fileListEl.innerHTML = 'Loading files…';
     try {
       // Fetch available files
-      const resFiles = await fetch('api/files');
+      const resFiles = await fetch('files');
       const dataFiles = await resFiles.json();
       if (!resFiles.ok) {
         fileListEl.textContent = dataFiles.error || 'Failed to load files.';
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Fetch job metadata to correlate list names and counts
       let jobMap = {};
       try {
-        const resJobs = await fetch('api/jobs');
+        const resJobs = await fetch('jobs');
         const dataJobs = await resJobs.json();
         if (resJobs.ok && Array.isArray(dataJobs.jobs)) {
           dataJobs.jobs.forEach((j) => {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const downloadBtn = document.createElement('button');
         downloadBtn.textContent = 'Download';
         downloadBtn.addEventListener('click', () => {
-          window.location.href = `api/download/${encodeURIComponent(file)}`;
+          window.location.href = `download/${encodeURIComponent(file)}`;
         });
         downloadCol.appendChild(downloadBtn);
         // Delete button
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.addEventListener('click', async () => {
           if (!confirm(`Delete ${file}?`)) return;
           try {
-            const delRes = await fetch(`api/delete/${encodeURIComponent(file)}`, {
+            const delRes = await fetch(`delete/${encodeURIComponent(file)}`, {
               method: 'DELETE',
             });
             const delData = await delRes.json();

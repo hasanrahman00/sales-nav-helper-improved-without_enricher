@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadJobs() {
     jobListEl.textContent = 'Loading jobs…';
     try {
-      const res = await fetch('api/jobs');
+      const res = await fetch('jobs');
       const data = await res.json();
       if (!res.ok) {
         jobListEl.textContent = data.error || 'Failed to load jobs.';
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         runBtn.addEventListener('click', async () => {
           try {
-            const resRun = await fetch(`api/jobs/${encodeURIComponent(job.id)}/run`, {
+            const resRun = await fetch(`jobs/${encodeURIComponent(job.id)}/run`, {
               method: 'POST',
             });
 
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         stopBtn.addEventListener('click', async () => {
           try {
-            const resStop = await fetch(`api/jobs/${encodeURIComponent(job.id)}/stop`, {
+            const resStop = await fetch(`jobs/${encodeURIComponent(job.id)}/stop`, {
               method: 'POST',
             });
 
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.addEventListener('click', async () => {
           if (!confirm(`Delete job "${job.listName}"? This cannot be undone.`)) return;
           try {
-            const resDel = await fetch(`api/jobs/${encodeURIComponent(job.id)}`, { method: 'DELETE' });
+            const resDel = await fetch(`jobs/${encodeURIComponent(job.id)}`, { method: 'DELETE' });
 
             const dat = await resDel.json();
 

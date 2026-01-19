@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper to refresh status from server
 async function refreshStatus() {
   try {
-    const res = await fetch('api/status');
+    const res = await fetch('status');
     const data = await res.json();
     if (data) {
       isRunning = !!data.running;
@@ -76,7 +76,7 @@ async function refreshStatus() {
   // On page load, query cookie status and scraping status
   (async () => {
     try {
-      const res = await fetch('api/cookie-status');
+      const res = await fetch('cookie-status');
       const data = await res.json();
       if (data && data.message) {
         statusEl.textContent = data.message;
@@ -95,7 +95,7 @@ async function refreshStatus() {
       return;
     }
     try {
-      const res = await fetch('/api/save-cookie', {
+      const res = await fetch('save-cookie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cookie: text }),
@@ -111,12 +111,12 @@ async function refreshStatus() {
   deleteCookieBtn.addEventListener('click', async () => {
     statusEl.textContent = '';
     try {
-      const res = await fetch('/api/delete-cookie', { method: 'DELETE' });
+      const res = await fetch('delete-cookie', { method: 'DELETE' });
       const data = await res.json();
       statusEl.textContent = data.message || data.error || '';
       // Refresh cookie status after deletion
       try {
-        const res2 = await fetch('api/cookie-status');
+        const res2 = await fetch('cookie-status');
         const data2 = await res2.json();
         if (data2 && data2.message) {
           statusEl.textContent = data2.message;
@@ -154,7 +154,7 @@ async function refreshStatus() {
       isPaused = false;
       updateButtons();
       outEl.textContent = 'Scraping is running…';
-      const res = await fetch('/api/scrape', {
+      const res = await fetch('scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, listName }),
@@ -184,7 +184,7 @@ async function refreshStatus() {
     // If running, request stop
     if (isRunning) {
       try {
-        const res = await fetch('/api/stop', { method: 'POST' });
+        const res = await fetch('stop', { method: 'POST' });
         const data = await res.json();
         outEl.textContent = data.message || '';
         // Immediately reflect paused state; actual pause will update backend
@@ -197,7 +197,7 @@ async function refreshStatus() {
     } else if (isPaused) {
       // Resume paused scrape
       try {
-        const res = await fetch('/api/resume', { method: 'POST' });
+        const res = await fetch('resume', { method: 'POST' });
         const data = await res.json();
         outEl.textContent = data.message || '';
         isRunning = true;

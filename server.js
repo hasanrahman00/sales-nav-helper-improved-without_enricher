@@ -152,11 +152,11 @@ loadJobs().catch(() => {});
 
 cleanupOldJobs().catch(() => {});
 
-// Register API routes.  The route files only handle API paths and
-// should return JSON.  Mount them under the `/api` prefix so they do
-// not collide with frontend paths.
-app.use(`${BASE_PATH}/api`, require('./routes/cookieRoutes'));
-app.use(`${BASE_PATH}/api`, require('./routes/scrapeRoutes'));
+// Register API routes.
+// These are mounted directly under BASE_PATH so the public endpoints are:
+//   /salesnav/save-cookie, /salesnav/status, ... (no extra /api prefix)
+app.use(`${BASE_PATH || ''}`, require('./routes/cookieRoutes'));
+app.use(`${BASE_PATH || ''}`, require('./routes/scrapeRoutes'));
 
 // The browser and third‑party login checks are performed lazily within
 // the scrape route.  We intentionally avoid launching a browser at
