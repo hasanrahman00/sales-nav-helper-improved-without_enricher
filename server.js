@@ -63,34 +63,29 @@ function getAllowedOriginsFromEnv() {
     .filter(Boolean);
 }
 
+function getAllowedOrigins() {
+  const fromEnv = getAllowedOriginsFromEnv();
+  if (fromEnv.length > 0) return fromEnv;
+  // Default allowlist (credentials-safe). Keep this tight.
+  return [
+    'https://api.daddy-leads.com',
+    'http://localhost:3000',
+  ];
+}
+
 function isOriginAllowed(origin) {
-  const allowAll = String(process.env.CORS_ALLOW_ALL || '').toLowerCase() === 'true';
-  if (allowAll) return true;
-
-  const envAllowed = getAllowedOriginsFromEnv();
-  if (envAllowed.length > 0) {
-    return envAllowed.includes(origin);
-  }
-
-  // Safe defaults for common local + your production domains.
-  // You can override via CORS_ORIGINS.
-  try {
-    const { hostname, protocol } = new URL(origin);
-    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
-    if (isLocalHost && (protocol === 'http:' || protocol === 'https:')) return true;
-    if (hostname === 'daddy-leads.com' || hostname.endsWith('.daddy-leads.com')) return true;
-    return false;
-  } catch {
-    return false;
-  }
+  if (!origin) return false;
+  return getAllowedOrigins().includes(origin);
 }
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
+  // Always vary on Origin when doing allowlist CORS.
+  res.header('Vary', 'Origin');
+
   if (origin && isOriginAllowed(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
-    res.header('Vary', 'Origin');
     res.header('Access-Control-Allow-Credentials', 'true');
   }
 
@@ -101,6 +96,7 @@ app.use((req, res, next) => {
     reqHeaders ? String(reqHeaders) : 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
   );
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Max-Age', '600');
 
   if (req.method === 'OPTIONS') {
     // If there's an Origin and it's not allowed, fail the preflight explicitly.
