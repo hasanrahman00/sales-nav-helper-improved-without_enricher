@@ -2,6 +2,7 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs/promises');
 const router = express.Router();
 
 const { getCookieFilePath } = require('../utils/fileHandler');
@@ -56,6 +57,21 @@ const scrapeSession = {
 // Navigator list to the next page until either a change is detected
 // or no more pages exist.
 const { clickNextPage } = require('../utils/nextPageNavigation');
+
+async function maybeCaptureDebugScreenshot({ jobId, label, page }) {
+  const debugVideoEnabled = String(process.env.DEBUG_VIDEO || '').toLowerCase() === 'true';
+  if (!debugVideoEnabled) return;
+  if (!page) return;
+  try {
+    const dir = path.join(__dirname, '..', 'data', 'debug');
+    await fs.mkdir(dir, { recursive: true });
+    const safeLabel = String(label || 'debug').replace(/[^a-z0-9._-]+/gi, '_');
+    const fileName = `${jobId || 'job'}_${safeLabel}_${Date.now()}.png`;
+    await page.screenshot({ path: path.join(dir, fileName), fullPage: true });
+  } catch {
+    // ignore
+  }
+}
 
 // Expose a status endpoint so the frontend can determine the state of the
 // scraper.  Returns { running, paused, url, listName, fileName, pageIndex }.
@@ -291,6 +307,7 @@ async function runScrape() {
   }
   // Launch browser
   const context = await launchStealthBrowser();
+  let page = null;
   try {
     // Ensure third‑party logins
     const coPath = path.join(__dirname, '..', 'contactout_cookies.json');
@@ -353,6 +370,8 @@ async function runScrape() {
 
       job.message = 'LinkedIn cookie expired. Please update your cookie.';
 
+      page = liCheck.page;
+      await maybeCaptureDebugScreenshot({ jobId, label: 'cookie_expired', page });
       try { await context.close(); } catch { }
 
       await updateJob(jobId, {
@@ -368,7 +387,7 @@ async function runScrape() {
     }
 
 
-    const page = liCheck.page;
+    page = liCheck.page;
     // When resuming, we jump directly to the previously saved page via
     // job.currentUrl.  Therefore we no longer need to click through
     // intermediate pages.  currentPage will be initialised to the
@@ -557,6 +576,7 @@ async function runScrape() {
           scrapeSession.isScraping = false;
           scrapeSession.isPaused = true;
           scrapeSession.pauseRequested = false;
+          await maybeCaptureDebugScreenshot({ jobId, label: 'nav_failed', page });
           await context.close();
           // Persist paused state
           await updateJob(jobId, {
@@ -599,6 +619,7 @@ async function runScrape() {
     scrapeSession.isScraping = false;
     scrapeSession.isPaused = false;
     job.state = 'paused';
+    await maybeCaptureDebugScreenshot({ jobId, label: 'unexpected_error', page });
     try {
       await context.close();
     } catch { }

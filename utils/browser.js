@@ -1,6 +1,7 @@
 // utils/browser.js
 
 const path = require('path');
+const fs = require('fs/promises');
 
 /*
  * This helper wraps the Playwright Extra API and configures a
@@ -25,6 +26,15 @@ chromium.use(StealthPlugin());
 async function launchStealthBrowser() {
   // Directory where Playwright will store session data (cookies, localStorage).
   const userDataDir = path.join(__dirname, '..', 'user_data');
+  const debugVideoEnabled = String(process.env.DEBUG_VIDEO || '').toLowerCase() === 'true';
+  const videoDir = path.join(__dirname, '..', 'data', 'videos');
+  if (debugVideoEnabled) {
+    try {
+      await fs.mkdir(videoDir, { recursive: true });
+    } catch {
+      // ignore
+    }
+  }
   // Paths to your unpacked extensions; replace the placeholder folders
   // with your actual extension code.
   const ext1 = path.join(__dirname, '..', 'extensions', 'contacout');
@@ -50,6 +60,14 @@ async function launchStealthBrowser() {
     viewport: { width: 1920, height: 1080 },
     userAgent:
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+    ...(debugVideoEnabled
+      ? {
+          recordVideo: {
+            dir: videoDir,
+            size: { width: 1280, height: 720 },
+          },
+        }
+      : {}),
   });
 }
 
