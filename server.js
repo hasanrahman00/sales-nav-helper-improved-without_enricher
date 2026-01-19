@@ -10,7 +10,98 @@ const express = require('express');
 // handlers in separate files (under the routes folder) makes the
 const app = express();
 
+// If deployed behind a reverse proxy (NGINX/Cloudflare), this helps Express
+// correctly detect protocol/IP when you rely on them.
+app.set('trust proxy', 1);
 
+// Optional base path (useful when your VPS/reverse-proxy serves this app under
+// a prefix like https://api.example.com/salesnav).
+function normalizeBasePath(raw) {
+  if (!raw) return '';
+  let base = String(raw).trim();
+  if (!base) return '';
+  base = base.replace(/\/+$/g, '');
+  if (base === '/') return '';
+  if (!base.startsWith('/')) base = `/${base}`;
+  return base;
+}
+
+const BASE_PATH = normalizeBasePath(process.env.BASE_PATH || process.env.APP_BASE_PATH);
+
+// If using a BASE_PATH, ensure the directory URL ends with a trailing slash.
+// This prevents relative asset paths like "app.js" from resolving to "/app.js".
+if (BASE_PATH) {
+  app.get(BASE_PATH, (req, res) => res.redirect(302, `${BASE_PATH}/`));
+}
+
+
+
+// CORS support (works for both local + production).
+// IMPORTANT: If your frontend sends credentials (cookies/Authorization),
+// browsers will reject `Access-Control-Allow-Origin: *`.
+function getAllowedOriginsFromEnv() {
+  const raw = process.env.CORS_ORIGINS || process.env.ALLOWED_ORIGINS;
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isOriginAllowed(origin) {
+  const allowAll = String(process.env.CORS_ALLOW_ALL || '').toLowerCase() === 'true';
+  if (allowAll) return true;
+
+  const envAllowed = getAllowedOriginsFromEnv();
+  if (envAllowed.length > 0) {
+    return envAllowed.includes(origin);
+  }
+
+  // Safe defaults for common local + your production domains.
+  // You can override via CORS_ORIGINS.
+  try {
+    const { hostname, protocol } = new URL(origin);
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+    if (isLocalHost && (protocol === 'http:' || protocol === 'https:')) return true;
+    if (hostname === 'daddy-leads.com' || hostname.endsWith('.daddy-leads.com')) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && isOriginAllowed(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+
+  // Reflect requested headers/methods for preflight.
+  const reqHeaders = req.headers['access-control-request-headers'];
+  res.header(
+    'Access-Control-Allow-Headers',
+    reqHeaders ? String(reqHeaders) : 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    // If there's an Origin and it's not allowed, fail the preflight explicitly.
+    if (origin && !isOriginAllowed(origin)) {
+      return res.status(403).send('CORS origin not allowed');
+    }
+    return res.sendStatus(204);
+  }
+
+  // For non-preflight requests, block only if browser-origin is present and disallowed.
+  if (origin && !isOriginAllowed(origin)) {
+    return res.status(403).json({ error: 'CORS origin not allowed', origin });
+  }
+
+  return next();
+});
 
 // Middleware to parse JSON bodies.  Without this, Express will not
 // understand the JSON sent from the frontend.
@@ -19,7 +110,7 @@ app.use(express.json({ limit: '10mb' }));
 // Serve the compiled frontend assets from the `public` directory.  Any
 // static files (HTML, CSS, JS) placed under `public` will be served
 // relative to the root of the web server.
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(BASE_PATH || '/', express.static(path.join(__dirname, 'public')));
 
 // Ensure the data directory exists and perform an initial cleanup of old files.
 const { ensureDataDir, cleanupOldFiles } = require('./utils/dataManager');
@@ -53,9 +144,8 @@ cleanupOldJobs().catch(() => {});
 // Register API routes.  The route files only handle API paths and
 // should return JSON.  Mount them under the `/api` prefix so they do
 // not collide with frontend paths.
-app.use('/api', require('./routes/cookieRoutes'));
-
-app.use('/api', require('./routes/scrapeRoutes'));
+app.use(`${BASE_PATH}/api`, require('./routes/cookieRoutes'));
+app.use(`${BASE_PATH}/api`, require('./routes/scrapeRoutes'));
 
 // The browser and third‑party login checks are performed lazily within
 // the scrape route.  We intentionally avoid launching a browser at
@@ -67,7 +157,7 @@ app.use('/api', require('./routes/scrapeRoutes'));
 // still serves the SPA.  A wildcard route of '*' is not valid in
 // Express; using a wildcard pattern with a leading slash matches all
 // paths that have not been served by previous middleware.
-app.use((req, res) => {
+app.get(`${BASE_PATH || ''}/*`, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

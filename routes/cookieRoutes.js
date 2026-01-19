@@ -54,9 +54,6 @@ router.get('/cookie-status', (req, res) => {
     return res.status(500).json({ error: err.message || 'Failed to check cookie status.' });
   }
 });
-
-module.exports = router;
-
 // DELETE /api/delete-cookie
 // Removes the persisted LinkedIn cookie file if it exists.  The
 // frontend can call this endpoint when the user clicks the Delete
@@ -71,3 +68,5 @@ router.delete('/delete-cookie', (req, res) => {
     return res.status(500).json({ error: err.message || 'Failed to delete cookie.' });
   }
 });
+
+module.exports = router;

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper to refresh status from server
 async function refreshStatus() {
   try {
-    const res = await fetch('/api/status');
+    const res = await fetch('api/status');
     const data = await res.json();
     if (data) {
       isRunning = !!data.running;
@@ -76,7 +76,7 @@ async function refreshStatus() {
   // On page load, query cookie status and scraping status
   (async () => {
     try {
-      const res = await fetch('/api/cookie-status');
+      const res = await fetch('api/cookie-status');
       const data = await res.json();
       if (data && data.message) {
         statusEl.textContent = data.message;
@@ -116,7 +116,7 @@ async function refreshStatus() {
       statusEl.textContent = data.message || data.error || '';
       // Refresh cookie status after deletion
       try {
-        const res2 = await fetch('/api/cookie-status');
+        const res2 = await fetch('api/cookie-status');
         const data2 = await res2.json();
         if (data2 && data2.message) {
           statusEl.textContent = data2.message;

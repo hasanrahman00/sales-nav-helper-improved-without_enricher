@@ -1,1 +1,18 @@
 node_modules/
+
+# Local runtime artifacts / secrets
+cookies/
+*_cookies.json
+contactout_cookies.json
+signalhire_cookies.json
+
+# Generated output
+data/
+all_jobs/
+
+# Playwright/Chrome persistent profile
+user_data/
+
+# OS/Editor
+.DS_Store
+Thumbs.db

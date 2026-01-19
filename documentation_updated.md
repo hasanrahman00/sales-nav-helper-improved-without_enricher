@@ -77,7 +77,46 @@ sales-nav-helper/
 
 #### Server (`server.js`)
 
-Initialises the Express application, sets up JSON body parsing and static file serving, ensures the `data/` and `all_jobs/` directories exist, cleans up old files and jobs on startup, and loads persisted jobs into memory using `jobsManager.loadJobs()`.  It mounts the route handlers (`cookieRoutes` and `scrapeRoutes`) and serves the front‑end files.  The server listens on port 3000.
+Initialises the Express application, sets up JSON body parsing and static file serving, ensures the `data/` and `all_jobs/` directories exist, cleans up old files and jobs on startup, and loads persisted jobs into memory using `jobsManager.loadJobs()`.  It mounts the route handlers (`cookieRoutes` and `scrapeRoutes`) and serves the front‑end files.  The server listens on port 3001 (or `PORT`).
+
+**Deployment note (local + production)**
+
+This project supports being hosted either at the domain root (local dev) or behind a path prefix in production.
+
+* **Local** (default):
+  * UI: `http://localhost:3001/`
+  * API: `http://localhost:3001/api/...`
+
+* **Production behind a prefix** (example: `https://api.daddy-leads.com/salesnav/`):
+  * Set `BASE_PATH=/salesnav`
+  * API becomes: `/salesnav/api/...`
+  * The frontend uses relative API paths so it works in both modes.
+
+**CORS configuration**
+
+Browsers will block cross‑origin calls unless the Origin is allowed. Configure either:
+
+* `CORS_ORIGINS=https://daddy-leads.com,https://www.daddy-leads.com` (recommended)
+* or `CORS_ALLOW_ALL=true` (not recommended for production)
+
+If your frontend sends cookies/authorization, wildcard `*` origins will not work with credentials; use `CORS_ORIGINS`.
+
+**NGINX example (path prefix proxy)**
+
+If you run the Node server on `127.0.0.1:3001` and want public access at `/salesnav/`:
+
+```nginx
+location /salesnav/ {
+  proxy_pass http://127.0.0.1:3001/salesnav/;
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+Make sure the upstream includes `/salesnav/` so the app sees the same base path.
 
 #### Routes
 
