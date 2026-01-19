@@ -31,7 +31,22 @@ const BASE_PATH = normalizeBasePath(process.env.BASE_PATH || process.env.APP_BAS
 // If using a BASE_PATH, ensure the directory URL ends with a trailing slash.
 // This prevents relative asset paths like "app.js" from resolving to "/app.js".
 if (BASE_PATH) {
-  app.get(BASE_PATH, (req, res) => res.redirect(302, `${BASE_PATH}/`));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+    // Express (with strict routing off) treats `/salesnav` and `/salesnav/` as equivalent
+    // for route matching, so we must only redirect when the request URL is EXACTLY
+    // the non-trailing-slash form.
+    const originalUrl = req.originalUrl || '';
+    if (originalUrl === BASE_PATH) {
+      return res.redirect(302, `${BASE_PATH}/`);
+    }
+    if (originalUrl.startsWith(`${BASE_PATH}?`)) {
+      // Preserve query string.
+      return res.redirect(302, `${BASE_PATH}/${originalUrl.slice(BASE_PATH.length)}`);
+    }
+    return next();
+  });
 }
 
 
