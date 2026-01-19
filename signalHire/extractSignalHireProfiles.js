@@ -11,6 +11,8 @@
 const { cleanName } = require('../utils/nameCleaner');
 const { cleanCompanyName } = require('../utils/cleanCompanyName');
 
+const FAST_MODE = ['1', 'true', 'yes'].includes(String(process.env.FAST_MODE || '').toLowerCase());
+
 module.exports = async function extractSignalHireProfiles(page) {
   // Determine which frame the SignalHire cards reside in
   const root = await getSignalHireRoot(page);
@@ -102,7 +104,7 @@ async function loadAllCards(root, cardSel) {
       el.scrollBy(0, el.clientHeight * 0.8);
       el.scrollBy(0, el.clientHeight * 0.8);
     }, handle);
-    await root.waitForTimeout(400);
+    await root.waitForTimeout(FAST_MODE ? 150 : 400);
     const next = await root.locator(cardSel).count();
     if (next === count && count === prev) {
       stable += 1;

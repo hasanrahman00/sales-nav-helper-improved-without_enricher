@@ -13,6 +13,8 @@ const ROW_TITLE = 'a[data-control-name^="view_lead_panel"]';
 // nextDelaySecs from the same utils folder.
 const { nextDelaySecs } = require('./randomDelayer');
 
+const FAST_MODE = ['1', 'true', 'yes'].includes(String(process.env.FAST_MODE || '').toLowerCase());
+
 /**
  * Wait until the LinkedIn Sales Navigator lead list is visible.
  *
@@ -29,20 +31,23 @@ async function waitForLeadList(page, timeout = 10_000) {
   await page.waitForSelector(ROW_TITLE, { state: 'attached', timeout });
   // Ensure that a reasonable number of rows have loaded.  This
   // prevents early returns when only a single row has been rendered.
+  const minRows = FAST_MODE
+    ? Math.max(1, Number(process.env.FAST_MIN_ROWS || '5') || 5)
+    : 10;
   await page.waitForFunction(
-    (sel) => document.querySelectorAll(sel).length >= 10,
+    (sel, n) => document.querySelectorAll(sel).length >= n,
     ROW_TITLE,
+    minRows,
     { timeout }
   );
   // Finally, give the page a tiny amount of idle time to settle,
   // capped at 500ms.  Use domcontentloaded rather than waiting for
   // full load events to reduce wait time.  Swallow timeouts.
   await page.waitForLoadState('domcontentloaded', { timeout: 500 }).catch(() => {});
-  // Add a small random delay (2–5 seconds) after the list is visible to mimic
-  // human hesitation before interacting with the page.  If the delay fails
-  // (e.g. due to closed context), ignore the error.
+  // Add a small random delay after the list is visible to mimic
+  // human hesitation before interacting with the page.
   try {
-    const delaySeconds = nextDelaySecs(2, 5);
+    const delaySeconds = FAST_MODE ? nextDelaySecs(0.2, 0.6) : nextDelaySecs(2, 5);
     await page.waitForTimeout(delaySeconds * 1000);
   } catch {}
 }

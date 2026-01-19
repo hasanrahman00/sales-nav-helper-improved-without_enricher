@@ -197,6 +197,9 @@ Displays CSV files stored in the `data/` directory.  Each row shows the **List N
 
 * **Adding new extensions** – To integrate another extension (e.g. a different contact finder), create a new directory under `extensions/` with the unpacked extension code, implement login helpers in `utils/`, and build a new orchestrator similar to `signalHire/index.js` or `contactOut/index.js` that handles toggling, login detection, waiting for results and extracting data.  Integrate it into the scrape loop in `runScrape()`.
 * **Adjusting delays** – Modify parameters in `randomDelayer.js` (e.g. `nextDelaySecs()` range) or `salesDashBoardScroller.js` to simulate faster or slower human behaviour.  Increase retry counts in `nextPageNavigation.js` for slower networks.
+  * `FAST_MODE=true` reduces artificial delays (faster per-page scraping).
+  * `FAST_MIN_ROWS=5` (optional) lowers how many SalesNav rows must render before continuing.
+  * `SCRAPER_SPEED_SCALE=0.5` (optional) scales delays that go through `randomDelayer.js`.
 * **Debugging login failures** – Ensure the cookie file is up‑to‑date and exported from a logged‑in browser.  If an extension fails to login, update the cookies in `extensions/signalhire` or `extensions/contacout` (JSON exported from Chrome).  Use the login helpers’ console logs to identify authentication issues.
 * **Customising the UI** – Edit `public/style.css` to adjust colours, fonts or spacing.  Modify `public/app.js`, `public/all-jobs.js` or `public/download.js` to change button behaviour or add new features.  The UI uses minimal dependencies and vanilla JS for ease of maintenance.
 * **Housekeeping** – Job and file cleanups are performed automatically on server startup.  You can adjust the retention period by changing the `days` argument in `cleanupOldFiles()` and `cleanupOldJobs()` calls in `server.js`.

@@ -8,8 +8,18 @@
 // - opts.sequenceMs: an array of exact delays in ms, e.g. [1000, 1200, 1400, 1500]
 // - opts.steps, opts.jitter: shape the "increasing" pattern
 // - SCRAPER_SPEED_SCALE env var to globally scale all waits (default 1)
+// - FAST_MODE=true will reduce some delays and (unless SCRAPER_SPEED_SCALE is set)
+//   apply a smaller default scale.
 
-const SPEED_SCALE = Number(process.env.SCRAPER_SPEED_SCALE || '1') || 1;
+const FAST_MODE = ['1', 'true', 'yes'].includes(String(process.env.FAST_MODE || '').toLowerCase());
+const RAW_SCALE =
+  process.env.SCRAPER_SPEED_SCALE != null && String(process.env.SCRAPER_SPEED_SCALE).trim() !== ''
+    ? process.env.SCRAPER_SPEED_SCALE
+    : FAST_MODE
+      ? '0.5'
+      : '1';
+
+const SPEED_SCALE = Math.max(0, Number(RAW_SCALE) || 1);
 
 /** Random delay in seconds. */
 function nextDelaySecs(min = 0.5, max = 1) {
@@ -18,10 +28,15 @@ function nextDelaySecs(min = 0.5, max = 1) {
 }
 
 // Named sequences keyed by label (so call sites don’t need to change)
-const NAMED_SEQUENCES = {
-  // Your exact request for ContactOut pre-extract:
-  'pre-contactout-extract': [1000, 1200, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
-};
+const NAMED_SEQUENCES = FAST_MODE
+  ? {
+      // Fast mode: keep a small "human" pause, but don't spend ~10–15s here.
+      'pre-contactout-extract': [250, 300, 350],
+    }
+  : {
+      // Normal mode: original longer sequence for stability.
+      'pre-contactout-extract': [1000, 1200, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
+    };
 
 /**
  * Random/increasing wait in ms. Backward-compatible:

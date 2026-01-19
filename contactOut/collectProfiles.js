@@ -10,6 +10,8 @@
 const { filterBusinessDomains } = require('./domainFilter');
 const { cleanName } = require('../utils/nameCleaner');
 
+const FAST_MODE = ['1', 'true', 'yes'].includes(String(process.env.FAST_MODE || '').toLowerCase());
+
 const ROOT_SELECTOR = 'div[data-testid="contact-information"]';
 
 /**
@@ -35,7 +37,7 @@ async function collectProfiles(context) {
       }
     })
     .catch(() => {});
-  await context.waitForTimeout(250);
+  await context.waitForTimeout(FAST_MODE ? 100 : 250);
   // If more cards appeared, do ONE retry and merge
   const afterCount = await context.locator(ROOT_SELECTOR).count();
   if (afterCount > beforeCount) {
