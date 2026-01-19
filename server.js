@@ -157,8 +157,10 @@ app.use(`${BASE_PATH}/api`, require('./routes/scrapeRoutes'));
 // still serves the SPA.  A wildcard route of '*' is not valid in
 // Express; using a wildcard pattern with a leading slash matches all
 // paths that have not been served by previous middleware.
-app.get(`${BASE_PATH || ''}/*`, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.use(BASE_PATH || '/', (req, res, next) => {
+  // Only serve the SPA shell for GET/HEAD. Let other methods fall through.
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start the HTTP server on the configured port.  The port can be
