@@ -8,6 +8,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,4 +45,24 @@ jobs:
             docker pull ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
             docker stop sales-nav-helper || true
             docker rm sales-nav-helper || true
-            docker run -d --name sales-nav-helper -p 3002:3001 ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
+            docker run -d \
+              --name sales-nav-helper \
+              --restart unless-stopped \
+              -p 3002:3001 \
+              -e PORT=3001 \
+              -e BASE_PATH=/salesnav \
+              -e CORS_ORIGINS=https://api.daddy-leads.com,https://daddy-leads.com,https://www.daddy-leads.com \
+              --shm-size=1g \
+              ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
+
+            # Verify container is actually running (otherwise NGINX will show 502)
+            sleep 5
+            docker ps --filter "name=sales-nav-helper"
+            if ! docker ps --format "{{.Names}}" | grep -q "^sales-nav-helper$"; then
+              echo "sales-nav-helper is not running; recent logs:" >&2
+              docker logs sales-nav-helper --tail 200 || true
+              exit 1
+            fi
+
+            # Basic smoke test from the VPS host
+            curl -fsS -o /dev/null http://127.0.0.1:3002/salesnav/api/status
