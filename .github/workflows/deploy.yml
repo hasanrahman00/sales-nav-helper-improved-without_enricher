@@ -31,7 +31,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
+            ghcr.io/${{ github.repository_owner }}/sales-nav-helper:${{ github.sha }}
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -42,7 +44,7 @@ jobs:
           port: 22
           script: |
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
-            docker pull ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/sales-nav-helper:${{ github.sha }}
             docker stop sales-nav-helper || true
             docker rm sales-nav-helper || true
             docker run -d \
@@ -53,11 +55,12 @@ jobs:
               -e BASE_PATH=/salesnav \
               -e CORS_ORIGINS=https://api.daddy-leads.com,https://daddy-leads.com,https://www.daddy-leads.com \
               --shm-size=1g \
-              ghcr.io/${{ github.repository_owner }}/sales-nav-helper:latest
+              ghcr.io/${{ github.repository_owner }}/sales-nav-helper:${{ github.sha }}
 
             # Verify container is actually running (otherwise NGINX will show 502)
             sleep 5
             docker ps --filter "name=sales-nav-helper"
+            docker inspect sales-nav-helper --format "image={{.Config.Image}} id={{.Id}}"
             if ! docker ps --format "{{.Names}}" | grep -q "^sales-nav-helper$"; then
               echo "sales-nav-helper is not running; recent logs:" >&2
               docker logs sales-nav-helper --tail 200 || true
